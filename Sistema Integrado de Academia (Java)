@@ -1,0 +1,247 @@
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class App {
+    public static void main(String[] args) {
+        // Obter o mês e ano atuais
+
+        Scanner scanner = new Scanner(System.in);
+        Academia academia = new Academia();
+
+        int opcao;
+        do {
+            System.out.println("----- Menu -----");
+            System.out.println("1. Inserir pessoa");
+            System.out.println("2. Buscar pessoa");
+            System.out.println("3. Remover pessoa");
+            System.out.println("4. Mostrar pessoas cadastradas");
+            System.out.println("0. Sair");
+            System.out.println("-----------------");
+            System.out.print("Digite a opção desejada: ");
+            opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    System.out.println("----- Inserir Pessoa -----");
+                    System.out.print("Nome: ");
+                    String nome = scanner.nextLine();
+
+                    System.out.print("Data de Nascimento: ");
+                    String dataNascimentoStr = scanner.nextLine();
+                    LocalDate dataNascimento;
+
+                    if (dataNascimentoStr.length() == 8) {
+                        DateTimeFormatter formatterSemBarras = DateTimeFormatter.ofPattern("ddMMyyyy");
+                        dataNascimento = LocalDate.parse(dataNascimentoStr, formatterSemBarras);
+                    } else {
+                        DateTimeFormatter formatterComBarras = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                        dataNascimento = LocalDate.parse(dataNascimentoStr, formatterComBarras);
+                    }
+
+                    //verificando < 120 anos
+                    LocalDate dataLimite = LocalDate.now().minusYears(120);
+                    if (dataNascimento.isBefore(dataLimite)) {
+                        System.out.println("Idade inválida. Pessoa não pode ser cadastrada.");
+                        break;
+                    }
+
+                    System.out.print("CPF: ");
+                    String cpf = scanner.nextLine();
+                    
+                    // Remover caracteres não numéricos do CPF
+                    cpf = cpf.replaceAll("[^0-9]", "");
+                    
+                    // Formatar o CPF no formato xxx.xxx.xxx-xx
+                    cpf = cpf.replaceFirst("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
+                    
+                    if (validaCPF(cpf)) {
+                        Pessoa pessoa = new Pessoa(nome, dataNascimento, cpf);
+                        academia.inserirPessoa(pessoa);
+                        System.out.println("Pessoa inserida com sucesso!");
+                    } else {
+                        System.out.println("CPF inválido. Pessoa não foi cadastrada.");
+                    }
+                    
+                    break;
+
+                case 2:
+                    System.out.println("----- Buscar Pessoa -----");
+                    System.out.print("CPF: ");
+                    String cpfBusca = scanner.nextLine();
+                
+                    Pessoa pessoaEncontrada = academia.buscarPessoaPorCPF(cpfBusca);
+                    if (pessoaEncontrada != null) {
+                        System.out.println("Pessoa encontrada:");
+                        System.out.println("Nome: " + pessoaEncontrada.getNome());
+                        System.out.println("Data de Nascimento: " + pessoaEncontrada.getDataNascimento());
+                        System.out.println("CPF: " + pessoaEncontrada.getCpf());
+                    } else {
+                        System.out.println("Pessoa não encontrada.");
+                    }
+                    break;
+                
+                case 3:
+                    System.out.println("----- Remover Pessoa -----");
+                    System.out.print("CPF da pessoa a ser removida: ");
+                    String cpfRemover = scanner.nextLine();
+                
+                    boolean pessoaRemovida = academia.removerPessoaPorCPF(cpfRemover);
+                
+                    if (pessoaRemovida) {
+                        System.out.println("Pessoa removida com sucesso!");
+                    } else {
+                        System.out.println("CPF não encontrado. Nenhuma pessoa removida.");
+                    }
+                    break;
+                
+                case 4:
+                    System.out.println("----- Pessoas Cadastradas -----");
+                    academia.mostrarPessoas();
+                    System.out.println("--------------------------------");
+                    break;
+                case 0:
+                    System.out.println("Encerrando o programa...");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+                    break;
+            }
+            System.out.println();
+        } while (opcao != 0);
+    }
+
+    public static boolean validaCPF(String cpf) {
+        // Remover caracteres não numéricos
+        cpf = cpf.replaceAll("[^0-9]", "");
+    
+        if (cpf.length() != 11) {
+            return false;
+        }
+    
+        int num1 = Character.getNumericValue(cpf.charAt(0));
+        int num2 = Character.getNumericValue(cpf.charAt(1));
+        int num3 = Character.getNumericValue(cpf.charAt(2));
+        int num4 = Character.getNumericValue(cpf.charAt(3));
+        int num5 = Character.getNumericValue(cpf.charAt(4));
+        int num6 = Character.getNumericValue(cpf.charAt(5));
+        int num7 = Character.getNumericValue(cpf.charAt(6));
+        int num8 = Character.getNumericValue(cpf.charAt(7));
+        int num9 = Character.getNumericValue(cpf.charAt(8));
+        int num10 = Character.getNumericValue(cpf.charAt(9));
+        int num11 = Character.getNumericValue(cpf.charAt(10));
+    
+        if (num1 == num2 && num2 == num3 && num3 == num4 && num4 == num5 && num5 == num6 && num6 == num7 &&
+                num7 == num8 && num8 == num9 && num9 == num10 && num10 == num11) {
+            return false;
+        } else {
+            int soma1 = num1 * 10 + num2 * 9 + num3 * 8 + num4 * 7 + num5 * 6 + num6 * 5 + num7 * 4 + num8 * 3 + num9 * 2;
+            double resto1 = (soma1 * 10) % 11;
+    
+            if (resto1 == 10) {
+                resto1 = 0;
+            }
+    
+            int soma2 = num1 * 11 + num2 * 10 + num3 * 9 + num4 * 8 + num5 * 7 + num6 * 6 + num7 * 5 + num8 * 4 + num9 * 3 + num10 * 2;
+            double resto2 = (soma2 * 10) % 11;
+    
+            if (resto2 == 10) {
+                resto2 = 0;
+            }
+    
+            return (resto1 == num10) && (resto2 == num11);
+        }
+    }
+}
+
+class Pessoa {
+    private String nome;
+    private LocalDate dataNascimento;
+    private String cpf;
+
+    public Pessoa(String nome, LocalDate dataNascimento, String cpf) {
+        this.nome = nome;
+        this.dataNascimento = dataNascimento;
+        this.cpf = cpf;
+    }
+
+    // Getters e setters omitidos para simplificar
+
+    public String getNome() {
+        return nome;
+    }
+
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+}
+
+class Academia {
+    private List<Pessoa> pessoas;
+
+    public Academia() {
+        pessoas = new ArrayList<>();
+    }
+    // Inserir Pessoa
+    public void inserirPessoa(Pessoa pessoa) {
+        pessoas.add(pessoa);
+    }
+
+    public Pessoa buscarPessoaPorCPF(String cpf) {
+        String cpfFormatado = formatarCPF(cpf);
+        
+        for (Pessoa pessoa : pessoas) {
+            if (formatarCPF(pessoa.getCpf()).equals(cpfFormatado)) {
+                return pessoa;
+            }
+        }
+        return null; // Retorna null se o CPF não for encontrado
+    }
+
+    public boolean removerPessoaPorCPF(String cpf) {
+        String cpfFormatado = formatarCPF(cpf); //formatando o cpf para acietar xxxxxxxxxxxxx ou xxx.xxx.xxx-xx
+
+        for (int i = 0; i < pessoas.size(); i++) {
+            Pessoa pessoa = pessoas.get(i);
+            if (pessoa.getCpf().equals(cpfFormatado)) {
+                pessoas.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private String formatarCPF(String cpf) {
+        cpf = cpf.replaceAll("[^0-9]", ""); // Remover caracteres não numéricos
+        
+        return cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-" + cpf.substring(9);
+    }
+
+
+    // Mostrar Pessoa
+    public void mostrarPessoas() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate dataAtual = LocalDate.now(); // Obter a data atual
+    
+        for (Pessoa pessoa : pessoas) {
+            System.out.println("Nome: " + pessoa.getNome());
+            System.out.println("Data de Nascimento: " + pessoa.getDataNascimento().format(formatter));
+            System.out.println("CPF: " + pessoa.getCpf());
+            
+            // Calcular a idade
+            int idade = Period.between(pessoa.getDataNascimento(), dataAtual).getYears();
+            System.out.println("Idade: " + idade + " anos");
+            
+            System.out.println();
+        }
+    }
+    
+}
